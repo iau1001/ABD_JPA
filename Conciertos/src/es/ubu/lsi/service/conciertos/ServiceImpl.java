@@ -178,4 +178,43 @@ public class ServiceImpl extends PersistenceService implements Service{
 		}
 		
 	}
+
+	/**
+	 * Consulta gupos. En este caso en particular es importante recuperar 
+	 * toda la información vinculada a los grupos, conciertos, compras y anulaciones
+	 * 
+	 * @return grupos
+	 * @throws PersistenceException si se produce un error
+	 */
+	@Override
+	public List<Grupo> consultarGrupos() throws PersistenceException {
+		EntityManager em = this.createSession();
+		//Se intenta realizar la consulta
+		try {
+			beginTransaction(em);
+			//GrupoDAO
+			GrupoDAO<Grupo,Integer> grupoDAO = new GrupoDAO<Grupo,Integer>(em);
+			//Se realiza la consulta
+			List<Grupo> grupos = grupoDAO.consultar("gruposConConciertosComprasyClientes", "javax.persistence.fetchgraph");
+			//Commit
+			commitTransaction(em);
+			//Retorna la informacion
+			return grupos;
+		//Captura cualquier error
+		} catch (Exception e){
+			logger.error("Exception");
+			//Rollback si transaccion activa
+			if (em.getTransaction().isActive()) {
+				logger.info("Commit rollback");
+				rollbackTransaction(em);
+			}
+			logger.error(e.getLocalizedMessage());
+			//Relanzar error
+			throw e;
+		//Cerrar recursos
+		} finally {
+			em.close();
+		}
+	}
+
 }
