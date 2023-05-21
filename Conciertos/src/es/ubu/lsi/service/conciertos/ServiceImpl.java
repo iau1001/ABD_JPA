@@ -115,4 +115,67 @@ public class ServiceImpl extends PersistenceService implements Service{
 		}
 		
 	}
+
+	/**
+	 * Desactiva un grupo y elimina todos los registros asociados.
+	 * 
+	 * @param grupo id_grupo
+	 * @throws PersistenceException si se produce un error
+	 */
+	@Override
+	public void desactivar(int grupo) throws PersistenceException {
+		EntityManager em = this.createSession();
+		//Se intenta desactivar el grupo y eliminar los registros
+		try {
+			beginTransaction(em);
+			//GrupoDAO
+			GrupoDAO<Grupo,Integer> grupoDAO = new GrupoDAO<Grupo,Integer>(em);
+			//Se busca el grupo por su id
+			Grupo grupoObj = grupoDAO.findById(grupo);
+			//Si no existe el grupo se lanza un error
+			if(grupoObj==null) {
+				throw new IncidentException(IncidentError.NOT_EXIST_MUSIC_GROUP);
+			}
+			//Si no, se desactiva el grupo
+			grupoDAO.desactivarGrupo(grupoObj);
+			
+			//CompraDAO
+			CompraDAO<Compra,Integer> compraDAO = new CompraDAO<Compra,Integer>(em);
+			
+			//ConciertoDAO
+			ConciertoDAO<Concierto,Integer> conciertoDAO = new ConciertoDAO<Concierto,Integer>(em);
+			//Conciertos con ese grupo
+			List<Concierto> conciertos = conciertoDAO.findByGroup(grupo);
+			//Se eliminan conciertos y compras
+			if (conciertos.size()!=0) {
+				for (Concierto c: conciertos) {
+					for (Compra com : c.getCompras()) {
+						compraDAO.remove(com);
+					}
+					conciertoDAO.remove(c);
+				}
+			}
+			//Commit
+			commitTransaction(em);
+		//Captura cualquier error
+		} catch (Exception e){
+			logger.error("Exception");
+			//Rollback si transaccion activa
+			if (em.getTransaction().isActive()) {
+				logger.info("Commit rollback");
+				rollbackTransaction(em);
+			}
+			logger.error(e.getLocalizedMessage());
+			//Relanzar error
+			if (e instanceof IncidentException) {
+				throw (IncidentException) e;
+			}else {
+				throw e;
+			}
+		//Cerrar recursos
+		} finally {
+			em.close();
+		}
+		
+	}
 }
