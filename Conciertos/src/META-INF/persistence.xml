@@ -8,6 +8,12 @@
 		<!-- <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider> -->
 		
 		<!-- COMPLETAR LISTA DE CLASES POR LOS ALUMNOS -->	
+		<class>es.ubu.lsi.model.conciertos.Cliente</class>
+		<class>es.ubu.lsi.model.conciertos.Grupo</class>
+        <class>es.ubu.lsi.model.conciertos.Compra</class>
+        <class>es.ubu.lsi.model.conciertos.Concierto</class>
+        <class>es.ubu.lsi.model.conciertos.DireccionPostal</class>
+        
 
 	
 	<properties>
